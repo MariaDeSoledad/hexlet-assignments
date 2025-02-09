@@ -16,7 +16,7 @@ public final class App {
 
         // BEGIN
         app.get("/users", ctx -> {
-            int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(5);
+            int page = ctx.queryParamAsClass("page", Integer.class).getOrDefault(1);
             int perPage = ctx.queryParamAsClass("per", Integer.class).getOrDefault(5);
 
             int fromIndex = (page - 1) * perPage;
