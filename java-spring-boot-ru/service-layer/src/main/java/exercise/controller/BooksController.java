@@ -7,6 +7,8 @@ import exercise.dto.BookCreateDTO;
 import exercise.dto.BookDTO;
 import exercise.dto.BookUpdateDTO;
 import exercise.service.BookService;
+import exercise.exception.ResourceNotFoundException;
+import exercise.repository.AuthorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +29,9 @@ public class BooksController {
     @Autowired
     private BookService bookService;
 
+    @Autowired
+    private AuthorRepository authorRepository; // Для проверки существования автора
+
     // BEGIN
     @GetMapping(path = "")
     public ResponseEntity<List<BookDTO>> index() {
@@ -45,6 +50,11 @@ public class BooksController {
 
     @PostMapping(path = "")
     public ResponseEntity<BookDTO> create(@Valid @RequestBody BookCreateDTO bookData) {
+        // Проверка, существует ли автор
+        if (!authorRepository.existsById(bookData.getAuthorId())) {
+            throw new ResourceNotFoundException("Author with id = " + bookData.getAuthorId() + " not found");
+        }
+
         var book = bookService.create(bookData);
         return ResponseEntity.created(URI.create(""))
                 .body(book);
@@ -52,6 +62,11 @@ public class BooksController {
 
     @PutMapping(path = "/{id}")
     public ResponseEntity<BookDTO> update(@PathVariable Long id, @Valid @RequestBody BookUpdateDTO bookData) {
+        // Проверка, существует ли автор
+        if (!authorRepository.existsById(bookData.getAuthorId())) {
+            throw new ResourceNotFoundException("Author with id = " + bookData.getAuthorId() + " not found");
+        }
+
         var book = bookService.update(id, bookData);
         return ResponseEntity.ok()
                 .body(book);
