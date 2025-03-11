@@ -6,77 +6,52 @@ import exercise.dto.AuthorUpdateDTO;
 import exercise.exception.ResourceNotFoundException;
 import exercise.mapper.AuthorMapper;
 import exercise.repository.AuthorRepository;
-import jakarta.validation.ConstraintViolation;
-import jakarta.validation.ConstraintViolationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import jakarta.validation.Validator;
 
 import java.util.List;
-import java.util.Set;
 
 @Service
 public class AuthorService {
-    // BEGIN
-    @Autowired
-    private AuthorRepository authorRepository;
+
+    private final AuthorRepository authorRepository;
+    private final AuthorMapper authorMapper;
 
     @Autowired
-    private AuthorMapper authorMapper;
-
-    @Autowired
-    private Validator validator;
+    public AuthorService(AuthorRepository authorRepository, AuthorMapper authorMapper) {
+        this.authorRepository = authorRepository;
+        this.authorMapper = authorMapper;
+    }
 
     public List<AuthorDTO> getAll() {
-        var authors = authorRepository.findAll();
-        return authors.stream()
+        return authorRepository.findAll()
+                .stream()
                 .map(authorMapper::map)
                 .toList();
     }
 
+    public AuthorDTO create(AuthorCreateDTO authorData) {
+        var author = authorMapper.map(authorData);
+        authorRepository.save(author);
+        return authorMapper.map(author);
+    }
+
     public AuthorDTO findById(Long id) {
         var author = authorRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
-        var authorDTO = authorMapper.map(author);
+                .orElseThrow(() -> new ResourceNotFoundException("Author with id = " + id + " not found"));
+        return authorMapper.map(author);
+    }
 
-        return authorDTO;
+    public AuthorDTO update(Long id, AuthorUpdateDTO authorData) {
+        var author = authorRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Author with id = " + id + " not found"));
+        authorMapper.update(authorData, author);
+        authorRepository.save(author);
+        return authorMapper.map(author);
     }
 
     public void delete(Long id) {
         authorRepository.deleteById(id);
     }
-
-    public AuthorDTO create(AuthorCreateDTO dto) {
-        validation(dto);
-        var author = authorMapper.map(dto);
-        authorRepository.save(author);
-        var authorDTO = authorMapper.map(author);
-
-        return authorDTO;
-    }
-
-    public AuthorDTO update(AuthorUpdateDTO dto, Long id) {
-        validation(dto);
-        var author = authorRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
-        authorMapper.update(dto, author);
-        authorRepository.save(author);
-        var authorDTO = authorMapper.map(author);
-
-        return authorDTO;
-    }
-
-    // сделано в исследовательских целях :) Можно просто использовать @Valid в контроллере - выше сервиса
-    private <T> void validation(T dto) {
-        Set<ConstraintViolation<T>> violations = validator.validate(dto);
-        if (!violations.isEmpty()) {
-            StringBuilder sb = new StringBuilder();
-            for (ConstraintViolation<T> constraintViolation : violations) {
-                sb.append(constraintViolation.getMessage());
-            }
-            throw new ConstraintViolationException("Error occurred: " + sb.toString(), violations);
-        }
-    }
-
     // END
 }
