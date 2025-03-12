@@ -30,38 +30,31 @@ public class AuthorsController {
 
     // BEGIN
     @GetMapping(path = "")
-    public ResponseEntity<List<AuthorDTO>> index() {
-        var authors = authorService.getAll();
-        return ResponseEntity.ok()
-                .header("X-Total-Count", String.valueOf(authors.size()))
-                .body(authors);
+    public List<AuthorDTO> index() {
+        return authorService.getAllAuthors();
     }
 
     @GetMapping(path = "/{id}")
-    public ResponseEntity<AuthorDTO> show(@PathVariable Long id) {
-        var author = authorService.findById(id);
-        return ResponseEntity.ok()
-                .body(author);
+    public AuthorDTO show(@PathVariable long id) {
+        return authorService.getAuthorById(id);
     }
 
-    @PostMapping
-    public ResponseEntity<AuthorDTO> create(@Valid @RequestBody AuthorCreateDTO authorData) {
-        var author = authorService.create(authorData);
-        return ResponseEntity.created(URI.create("/authors/" + author.getId()))
-                .body(author);
+    @PostMapping(path = "")
+    @ResponseStatus(HttpStatus.CREATED)
+    public AuthorDTO create(@Valid @RequestBody AuthorCreateDTO authorData) {
+        return authorService.createAuthor(authorData);
     }
 
-    @PutMapping(path = "/{id}")
-    public ResponseEntity<AuthorDTO> update(@PathVariable Long id, @Valid @RequestBody AuthorUpdateDTO authorData) {
-        var author = authorService.update(id, authorData);
-        return ResponseEntity.ok()
-                .body(author);
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    AuthorDTO update(@RequestBody @Valid AuthorUpdateDTO authorData, @PathVariable Long id) {
+        return authorService.updateAuthor(authorData, id);
     }
 
-    @DeleteMapping(path = "/{id}")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        authorService.delete(id);
+    void destroy(@PathVariable Long id) {
+        authorService.deleteAuthor(id);
     }
     // END
 }

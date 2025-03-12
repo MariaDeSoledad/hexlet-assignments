@@ -13,44 +13,46 @@ import java.util.List;
 
 @Service
 public class AuthorService {
-
-    private final AuthorRepository authorRepository;
-    private final AuthorMapper authorMapper;
+    // BEGIN
+    @Autowired
+    private AuthorRepository authorRepository;
 
     @Autowired
-    public AuthorService(AuthorRepository authorRepository, AuthorMapper authorMapper) {
-        this.authorRepository = authorRepository;
-        this.authorMapper = authorMapper;
-    }
+    private AuthorMapper authorMapper;
 
-    public List<AuthorDTO> getAll() {
-        return authorRepository.findAll()
-                .stream()
+    public List<AuthorDTO> getAllAuthors() {
+        var authors = authorRepository.findAll();
+        return authors.stream()
                 .map(authorMapper::map)
                 .toList();
     }
 
-    public AuthorDTO create(AuthorCreateDTO authorData) {
+    public AuthorDTO getAuthorById(long id) {
+
+        var author = authorRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Author with id " + id + " not found"));
+        var authorDTO = authorMapper.map(author);
+        return authorDTO;
+    }
+
+    public AuthorDTO createAuthor(AuthorCreateDTO authorData) {
         var author = authorMapper.map(authorData);
         authorRepository.save(author);
-        return authorMapper.map(author);
+        var authorDto = authorMapper.map(author);
+        return authorDto;
     }
 
-    public AuthorDTO findById(Long id) {
+    public AuthorDTO updateAuthor(AuthorUpdateDTO authorData, Long id) {
         var author = authorRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Author with id = " + id + " not found"));
-        return authorMapper.map(author);
-    }
+                .orElseThrow(() -> new ResourceNotFoundException("Author not Found: " + id));
 
-    public AuthorDTO update(Long id, AuthorUpdateDTO authorData) {
-        var author = authorRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Author with id = " + id + " not found"));
         authorMapper.update(authorData, author);
         authorRepository.save(author);
-        return authorMapper.map(author);
+        var authorDto = authorMapper.map(author);
+        return authorDto;
     }
 
-    public void delete(Long id) {
+    public void deleteAuthor(Long id) {
         authorRepository.deleteById(id);
     }
     // END

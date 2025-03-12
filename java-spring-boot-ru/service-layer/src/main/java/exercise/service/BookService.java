@@ -5,11 +5,8 @@ import exercise.dto.BookDTO;
 import exercise.dto.BookUpdateDTO;
 import exercise.exception.ResourceNotFoundException;
 import exercise.mapper.BookMapper;
-import exercise.model.Book;
 import exercise.repository.BookRepository;
-import exercise.repository.AuthorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -23,46 +20,39 @@ public class BookService {
     @Autowired
     private BookMapper bookMapper;
 
-    @Autowired
-    private AuthorRepository authorRepository;
+    public List<BookDTO> getAllBooks() {
+        var books = bookRepository.findAll();
 
-    public List<BookDTO> getAll() {
-        return bookRepository.findAll()
-                .stream()
+        return books.stream()
                 .map(bookMapper::map)
                 .toList();
     }
 
-    public BookDTO create(BookCreateDTO bookData) {
-        // Проверка существования автора с данным ID
-        if (!authorRepository.existsById(bookData.getAuthorId())) {
-            throw new ResourceNotFoundException("Author with id = " + bookData.getAuthorId() + " not found");
-        }
-
+    public BookDTO createBook(BookCreateDTO bookData) {
         var book = bookMapper.map(bookData);
-        try {
-            bookRepository.save(book);
-        } catch (DataIntegrityViolationException e) {
-            throw new DataIntegrityViolationException("Could not save book: " + e.getMessage());
-        }
-        return bookMapper.map(book);
+        bookRepository.save(book);
+        var bookDto = bookMapper.map(book);
+        return bookDto;
     }
 
-    public BookDTO findById(Long id) {
+    public BookDTO getBookById(Long id) {
         var book = bookRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Book with id = " + id + " not found"));
-        return bookMapper.map(book);
+                .orElseThrow(() -> new ResourceNotFoundException("Book not Found: " + id));
+        var bookDto = bookMapper.map(book);
+        return bookDto;
     }
 
-    public BookDTO update(Long id, BookUpdateDTO bookData) {
+    public BookDTO updateBook(BookUpdateDTO bookData, Long id) {
         var book = bookRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Book with id = " + id + " not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Book not Found: " + id));
+
         bookMapper.update(bookData, book);
         bookRepository.save(book);
-        return bookMapper.map(book);
+        var bookDto = bookMapper.map(book);
+        return bookDto;
     }
 
-    public void delete(Long id) {
+    public void deleteBook(Long id) {
         bookRepository.deleteById(id);
     }
     // END

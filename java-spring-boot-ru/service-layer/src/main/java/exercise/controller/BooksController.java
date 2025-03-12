@@ -33,49 +33,33 @@ public class BooksController {
     private AuthorRepository authorRepository; // Для проверки существования автора
 
     // BEGIN
-    @GetMapping(path = "")
-    public ResponseEntity<List<BookDTO>> index() {
-        var books = bookService.getAll();
-        return ResponseEntity.ok()
-                .header("X-Total-Count", String.valueOf(books.size()))
-                .body(books);
+    @GetMapping("")
+    List<BookDTO> index() {
+        return bookService.getAllBooks();
     }
 
-    @GetMapping(path = "/{id}")
-    public ResponseEntity<BookDTO> show(@PathVariable Long id) {
-        var book = bookService.findById(id);
-        return ResponseEntity.ok()
-                .body(book);
+    @PostMapping("")
+    @ResponseStatus(HttpStatus.CREATED)
+    BookDTO create(@Valid @RequestBody BookCreateDTO bookData) {
+        return bookService.createBook(bookData);
     }
 
-    @PostMapping(path = "")
-    public ResponseEntity<BookDTO> create(@Valid @RequestBody BookCreateDTO bookData) {
-        // Проверка, существует ли автор
-        if (!authorRepository.existsById(bookData.getAuthorId())) {
-            throw new ResourceNotFoundException("Author with id = " + bookData.getAuthorId() + " not found");
-        }
-
-        var book = bookService.create(bookData);
-        return ResponseEntity.created(URI.create(""))
-                .body(book);
+    @GetMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    BookDTO show(@PathVariable Long id) {
+        return bookService.getBookById(id);
     }
 
-    @PutMapping(path = "/{id}")
-    public ResponseEntity<BookDTO> update(@PathVariable Long id, @Valid @RequestBody BookUpdateDTO bookData) {
-        // Проверка, существует ли автор
-        if (!authorRepository.existsById(bookData.getAuthorId())) {
-            throw new ResourceNotFoundException("Author with id = " + bookData.getAuthorId() + " not found");
-        }
-
-        var book = bookService.update(id, bookData);
-        return ResponseEntity.ok()
-                .body(book);
+    @PutMapping("/{id}")
+    @ResponseStatus(HttpStatus.OK)
+    BookDTO update(@RequestBody @Valid BookUpdateDTO bookData, @PathVariable Long id) {
+        return bookService.updateBook(bookData, id);
     }
 
-    @DeleteMapping(path = "/{id}")
+    @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    public void delete(@PathVariable Long id) {
-        bookService.delete(id);
+    void destroy(@PathVariable Long id) {
+        bookService.deleteBook(id);
     }
     // END
 }
